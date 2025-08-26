@@ -9,7 +9,7 @@ const isLogin = (req, res, next) => {
 
   //? Verify the token
 
-  jwt.verify(token, "anykey", async (error, decoded) => {
+  jwt.verify(token, process.env.JWT_KEY, async (error, decoded) => {
     // console.log(decoded);
     const userId = decoded?.user?.id;
 
@@ -19,10 +19,9 @@ const isLogin = (req, res, next) => {
     req.userAuth = user;
 
     if (error) {
-      return "Invalid token";
+      const err = new Error("Token expired/Invalid");
+      next(err);
     } else {
-      //! save the user
-      //* send the user
       next();
     }
   });
