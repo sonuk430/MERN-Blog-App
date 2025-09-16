@@ -181,3 +181,83 @@ exports.profileViewers = asyncHandler(async (req, res) => {
     status: "success",
   });
 });
+
+// @Desc Following user
+//@route put /api/v1/users/following/:userIdToFollow
+//@access Private
+
+exports.following = asyncHandler(async (req, res) => {
+  // find the current user
+  const currentUserId = req.userAuth._id;
+  //! Find the user to follow
+  const userToFollowId = req.params.userToFollowId;
+  // Avoid user following himSelf
+  if (currentUserId.toString() === userToFollowId.toString()) {
+    throw new Error("You cannot follow yourself");
+  }
+  // Push the userToFollowId into the current user following field
+  await User.findByIdAndUpdate(
+    currentUserId,
+    {
+      $addToSet: { following: userToFollowId },
+    },
+    {
+      new: true,
+    }
+  );
+  // Push the userToUserID into the user to follow followers field
+  await User.findByIdAndUpdate(
+    userToFollowId,
+    {
+      $addToSet: { followers: currentUserId },
+    },
+    {
+      new: true,
+    }
+  );
+  // send the response
+  res.json({
+    status: "success",
+    message: "You have followed the user successfully",
+  });
+});
+
+// @Desc UnFollowing user
+//@route put /api/v1/users/unFollowing/:userIdToUnFollow
+//@access Private
+
+exports.unFollowing = asyncHandler(async (req, res) => {
+  // find the current user
+  const currentUserId = req.userAuth._id;
+  //! Find the user to unfollow
+  const userToUnFollowId = req.params.userToUnFollowId;
+  // Avoid user unFollowing himSelf
+  if (currentUserId.toString() === userToUnFollowId.toString()) {
+    throw new Error("You cannot Unfollow yourself");
+  }
+  // Remove the userToUnFollowId from the current user following field
+  await User.findByIdAndUpdate(
+    currentUserId,
+    {
+      $pull: { following: userToUnFollowId },
+    },
+    {
+      new: true,
+    }
+  );
+  // remove the currentUserId from the user to unfollow followers field
+  await User.findByIdAndUpdate(
+    userToUnFollowId,
+    {
+      $pull: { followers: currentUserId },
+    },
+    {
+      new: true,
+    }
+  );
+  // send the response
+  res.json({
+    status: "success",
+    message: "You have unfollowed the user successfully",
+  });
+});
